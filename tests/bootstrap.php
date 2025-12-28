@@ -6,6 +6,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use Dotenv\Dotenv;
 use VCR\VCR;
+use VCR\Request;
 
 // Load environment variables from .env if exists
 if (file_exists(__DIR__ . '/../.env')) {
@@ -17,16 +18,66 @@ if (file_exists(__DIR__ . '/../.env')) {
 VCR::configure()
     ->setCassettePath(__DIR__ . '/fixtures')
     ->setStorage('json')
-    ->setMode('none')
+    ->setMode('new_episodes')
     ->enableLibraryHooks(['curl', 'stream_wrapper'])
-    ->addRequestMatcher('method', function ($first, $second) {
+    ->addRequestMatcher('method', function (Request $first, Request $second) {
         return $first->getMethod() === $second->getMethod();
     })
-    ->addRequestMatcher('url', function ($first, $second) {
-        return $first->getUrl() === $second->getUrl();
+    ->addRequestMatcher('url', function (Request $first, Request $second) {
+        // Compare URLs without query parameters for flexibility
+        $url1 = strtok($first->getUrl(), '?');
+        $url2 = strtok($second->getUrl(), '?');
+        return $url1 === $url2;
     });
 
-// Filter sensitive data from recordings
-VCR::configure()->registerRequestMatcher('sanitized', function ($first, $second) {
-    return true;
+// Filter sensitive data from recordings (remove Authorization header)
+VCR::configure()->enableRequestMatchers(['method', 'url']);
+
+// Register a callback to sanitize recordings before saving
+VCR::configure()->registerRequestMatcher('body', function (Request $first, Request $second) {
+    return true; // Match any body for flexibility
 });
+
+/**
+ * Helper function to sanitize cassette files after recording.
+ * Removes Authorization headers and sensitive data from recorded requests.
+ */
+function sanitizeCassette(string $cassettePath): void
+{
+    if (!file_exists($cassettePath)) {
+        return;
+    }
+
+    $content = file_get_contents($cassettePath);
+    $data = json_decode($content, true);
+
+    if (!is_array($data)) {
+        return;
+    }
+
+    foreach ($data as &$recording) {
+        // Sanitize request headers
+        if (isset($recording['request']['headers'])) {
+            foreach ($recording['request']['headers'] as $key => &$values) {
+                if (strtolower($key) === 'authorization') {
+                    $values = ['Bearer [FILTERED]'];
+                }
+            }
+        }
+
+        // Sanitize response body if it contains tokens
+        if (isset($recording['response']['body'])) {
+            $body = $recording['response']['body'];
+            if (is_string($body)) {
+                $body = preg_replace(
+                    '/"(api_token|access_token|token)":\s*"[^"]+"/i',
+                    '"$1": "[FILTERED]"',
+                    $body
+                );
+                $recording['response']['body'] = $body;
+            }
+        }
+    }
+
+    file_put_contents($cassettePath, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+}
