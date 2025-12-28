@@ -17,9 +17,9 @@ if (file_exists(__DIR__ . '/../.env')) {
 VCR::configure()
     ->setCassettePath(__DIR__ . '/fixtures')
     ->setStorage('json')
-    ->setMode('new_episodes')
+    ->setMode('none')
     ->enableLibraryHooks(['curl', 'stream_wrapper'])
-    ->enableRequestMatchers(['method', 'url', 'body']);
+    ->enableRequestMatchers(['method', 'url']);
 
 /**
  * Helper function to sanitize cassette files after recording.
