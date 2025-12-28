@@ -56,30 +56,25 @@ class PixIntegrationTest extends IntegrationTestCase
             $this->assertNotNull($pix->id);
             $this->assertEquals(50.00, $pix->amount);
             $this->assertTrue($pix->exists());
-
-            // PIX should have QR code info
-            // Note: might be null while still processing
-            // $this->assertNotNull($pix->getQrCode());
-
-            return $pix->id;
         } finally {
             $this->stopCassette($cassette);
         }
     }
 
-    /**
-     * @depends testCanCreatePixCharge
-     */
-    public function testCanFindPixCharge(int $pixId = null): void
+    public function testCanFindPixCharge(): void
     {
-        if ($pixId === null) {
-            $this->markTestSkipped('Requires a PIX ID from create test.');
-        }
-
         $cassette = self::CASSETTE_PREFIX . '_find';
         $this->useCassette($cassette);
 
         try {
+            // First get a list to find an existing ID
+            $charges = Pix::all(['page' => 1, 'perPage' => 1], $this->client->getConnection());
+
+            if ($charges->isEmpty()) {
+                $this->markTestSkipped('No PIX charges available for find test.');
+            }
+
+            $pixId = $charges->first()->id;
             $pix = Pix::find($pixId, [], $this->client->getConnection());
 
             $this->assertNotNull($pix);

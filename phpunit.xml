@@ -27,7 +27,6 @@
         </report>
     </coverage>
     <php>
-        <env name="KOBANA_API_TOKEN" value="test_token"/>
-        <env name="KOBANA_ENVIRONMENT" value="sandbox"/>
+        <env name="KOBANA_ENVIRONMENT" value="sandbox" force="false"/>
     </php>
 </phpunit>

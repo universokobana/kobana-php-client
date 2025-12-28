@@ -10,6 +10,34 @@ use Kobana\Tests\TestCase;
 
 class ConfigurationTest extends TestCase
 {
+    private array $originalEnv = [];
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Save and clear environment variables that affect Configuration
+        $envVars = ['KOBANA_API_TOKEN', 'KOBANA_ENVIRONMENT', 'KOBANA_DEBUG'];
+        foreach ($envVars as $var) {
+            $this->originalEnv[$var] = $_ENV[$var] ?? null;
+            unset($_ENV[$var]);
+        }
+    }
+
+    protected function tearDown(): void
+    {
+        // Restore environment variables
+        foreach ($this->originalEnv as $var => $value) {
+            if ($value !== null) {
+                $_ENV[$var] = $value;
+            } else {
+                unset($_ENV[$var]);
+            }
+        }
+
+        parent::tearDown();
+    }
+
     public function testCanCreateConfigurationWithOptions(): void
     {
         $config = new Configuration([

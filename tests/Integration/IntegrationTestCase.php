@@ -21,8 +21,16 @@ abstract class IntegrationTestCase extends TestCase
     {
         parent::setUp();
 
+        // Load .env if not already loaded
+        if (!isset($_ENV['KOBANA_API_TOKEN']) || $_ENV['KOBANA_API_TOKEN'] === 'test_token') {
+            if (file_exists(__DIR__ . '/../../.env')) {
+                $dotenv = \Dotenv\Dotenv::createImmutable(__DIR__ . '/../..');
+                $dotenv->safeLoad();
+            }
+        }
+
         // Ensure we have an API token
-        $apiToken = $_ENV['KOBANA_API_TOKEN'] ?? getenv('KOBANA_API_TOKEN');
+        $apiToken = $_ENV['KOBANA_API_TOKEN'] ?? null;
 
         if (empty($apiToken) || $apiToken === 'test_token') {
             $this->markTestSkipped('KOBANA_API_TOKEN environment variable is required for integration tests.');

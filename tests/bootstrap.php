@@ -6,7 +6,6 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use Dotenv\Dotenv;
 use VCR\VCR;
-use VCR\Request;
 
 // Load environment variables from .env if exists
 if (file_exists(__DIR__ . '/../.env')) {
@@ -20,23 +19,7 @@ VCR::configure()
     ->setStorage('json')
     ->setMode('new_episodes')
     ->enableLibraryHooks(['curl', 'stream_wrapper'])
-    ->addRequestMatcher('method', function (Request $first, Request $second) {
-        return $first->getMethod() === $second->getMethod();
-    })
-    ->addRequestMatcher('url', function (Request $first, Request $second) {
-        // Compare URLs without query parameters for flexibility
-        $url1 = strtok($first->getUrl(), '?');
-        $url2 = strtok($second->getUrl(), '?');
-        return $url1 === $url2;
-    });
-
-// Filter sensitive data from recordings (remove Authorization header)
-VCR::configure()->enableRequestMatchers(['method', 'url']);
-
-// Register a callback to sanitize recordings before saving
-VCR::configure()->registerRequestMatcher('body', function (Request $first, Request $second) {
-    return true; // Match any body for flexibility
-});
+    ->enableRequestMatchers(['method', 'url', 'body']);
 
 /**
  * Helper function to sanitize cassette files after recording.

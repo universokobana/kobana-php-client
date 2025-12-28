@@ -235,4 +235,12 @@ class Configuration
     {
         return ['environment', 'apiVersion', 'customHeaders', 'debug', 'timeout'];
     }
+
+    /**
+     * Initialize token as null after unserialization.
+     */
+    public function __wakeup(): void
+    {
+        $this->apiToken = null;
+    }
 }

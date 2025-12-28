@@ -62,28 +62,25 @@ class BankBilletIntegrationTest extends IntegrationTestCase
             $this->assertNotNull($billet->id);
             $this->assertEquals(100.50, $billet->amount);
             $this->assertTrue($billet->exists());
-
-            // Store the ID for other tests
-            return $billet->id;
         } finally {
             $this->stopCassette($cassette);
         }
     }
 
-    /**
-     * @depends testCanCreateBankBillet
-     */
-    public function testCanFindBankBillet(int $billetId = null): void
+    public function testCanFindBankBillet(): void
     {
-        // Use a known ID if the create test didn't run
-        if ($billetId === null) {
-            $this->markTestSkipped('Requires a billet ID from create test.');
-        }
-
         $cassette = self::CASSETTE_PREFIX . '_find';
         $this->useCassette($cassette);
 
         try {
+            // First get a list to find an existing ID
+            $billets = BankBillet::all(['page' => 1, 'perPage' => 1], $this->client->getConnection());
+
+            if ($billets->isEmpty()) {
+                $this->markTestSkipped('No billets available for find test.');
+            }
+
+            $billetId = $billets->first()->id;
             $billet = BankBillet::find($billetId, [], $this->client->getConnection());
 
             $this->assertNotNull($billet);

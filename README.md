@@ -340,6 +340,6 @@ MIT License. See [LICENSE](LICENSE) for more information.
 
 ## Links
 
-- [Kobana Website](https://kobana.com.br)
-- [API Documentation](https://ai.kobana.com.br)
+- [Kobana Website](https://www.kobana.com.br)
+- [API Documentation](https://developers.kobana.com.br)
 - [GitHub Repository](https://github.com/universokobana/kobana-php-client)
