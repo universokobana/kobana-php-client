@@ -251,18 +251,68 @@ $last = $billets->last();
 
 ## Development
 
+### Setup
+
+```bash
+# Install dependencies
+composer install
+
+# Copy environment file and add your API token
+cp .env.example .env
+```
+
+Edit `.env` and add your Kobana API token:
+
+```env
+KOBANA_API_TOKEN=your_api_token_here
+KOBANA_ENVIRONMENT=sandbox
+```
+
 ### Running Tests
 
 ```bash
-composer install
+# Run all tests
 composer test
+
+# Or using PHPUnit directly
+./vendor/bin/phpunit
 ```
+
+### Unit Tests
+
+Unit tests don't require API access and test classes in isolation:
+
+```bash
+./vendor/bin/phpunit --testsuite Unit
+```
+
+### Integration Tests
+
+Integration tests make real API calls to the sandbox environment and record responses using [php-vcr](https://github.com/php-vcr/php-vcr):
+
+```bash
+./vendor/bin/phpunit --testsuite Integration
+```
+
+**First run:** Tests will call the real API and save responses to `tests/fixtures/`.
+
+**Subsequent runs:** Tests will use recorded responses (no API calls needed).
+
+**Recording new fixtures:** Delete the cassette file in `tests/fixtures/` to re-record.
+
+#### Security
+
+- Authorization headers are automatically filtered from recordings
+- Tokens in response bodies are replaced with `[FILTERED]`
+- Never commit `.env` files (already in `.gitignore`)
 
 ### Running Tests with Coverage
 
 ```bash
 composer test:coverage
 ```
+
+Coverage report will be generated in the `coverage/` directory.
 
 ## API Environments
 
